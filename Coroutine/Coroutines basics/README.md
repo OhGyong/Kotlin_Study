@@ -96,3 +96,56 @@ fun main() = runBlocking {
 코루틴에는 delay라는 정지 함수가 있다.<br>
 delay는 일정 시간 동안 코루틴을 중단할 수 있다.<br>
 따라서 실행 결과가 2, 1이 아닌 1, 2가 출력되었다.
+
+
+---
+part 2
+
+---
+
+지금까지 코루틴의 작업이 완료되는 것을 delay를 통해서 임의로 제어를 했다.<br>
+하지만 이 방식은 다른 코루틴의 작업이 언제 끝날지 알 수 없기 때문에 좋은 방법이 아니다.<br>
+
+```kotlin
+fun main() = runBlocking {
+    launch {
+        println("1")
+    }.join()
+    println("2")
+}
+
+// 실행 결과
+1
+2
+```
+
+코루틴에서는 launch의 반환 값인 Job 객체를 이용하여 명시적으로 제어를 할 수 있다.<br>
+Job의 join은 코루틴의 작업이 완료될 때까지 코루틴을 일시 정지한다.
+
+다른 예시를 보자.
+```kotlin
+fun main() = runBlocking {
+    val job = launch {
+        delay(3000L)
+        println("1")
+    }
+    
+    println("2")
+
+    job.join()
+    println("3")
+}
+
+// 실행 결과
+2
+1
+3
+```
+launch라는 코루틴 빌더로 비동기로 동작이 수행된다.<br>
+2가 출력되는 동안 launch의 코루틴 블록은 3초를 정지하게 되고<br>
+밖에서는 join을 만나 launch의 작업이 끝나기를 기다린다.<br>
+그 결과 2, 1, 3으로 출력되었다.
+
+<br>
+
+코루틴 범위가 더 필요한 경우 범위 빌더(Scope builder)를 사용하자.
