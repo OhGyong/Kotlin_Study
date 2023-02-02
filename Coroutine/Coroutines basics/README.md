@@ -148,4 +148,29 @@ launch라는 코루틴 빌더로 비동기로 동작이 수행된다.<br>
 
 <br>
 
-코루틴 범위가 더 필요한 경우 범위 빌더(Scope builder)를 사용하자.
+### Scope builder
+스코프 빌더를 사용하면 코루틴 범위를 생성할 수 있다.<br>
+스코프 빌더에는 coroutineScope가 있다.<br>
+
+```
+runBlocking은 코루틴 빌더라고 나왔지만 스코프 빌더로도 볼 수 있지 않을까?
+CoroutineScope와 GlobalScope도 스코프 빌더이지 않을까?
+```
+coroutineScope는 자신이 생성한 코루틴 블록의 작업이 완료될 때까지 코루틴을 정지한다.<br>
+```kotlin
+fun main() = runBlocking {
+    coroutineScope {
+        println("1")
+    }
+    println("2")
+}
+
+// 실행 결과
+1
+2
+```
+
+runBlocking처럼 실행 결과가 1, 2로 출력되어 runBlock과 coroutineScope가 비슷해 보일 수 있다.<br>
+runBlocking은 자신의 블록 작업이 완료될 때까지 스레드를 차단하는 것이고 coroutineScope는 코루틴을 정지한다.<br>
+그래서 runBlocking은 일반 함수, coroutineScope는 정지 함수이다.
+
