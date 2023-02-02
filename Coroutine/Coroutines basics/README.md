@@ -174,3 +174,88 @@ runBlocking처럼 실행 결과가 1, 2로 출력되어 runBlock과 coroutineSco
 runBlocking은 자신의 블록 작업이 완료될 때까지 스레드를 차단하는 것이고 coroutineScope는 코루틴을 정지한다.<br>
 그래서 runBlocking은 일반 함수, coroutineScope는 정지 함수이다.
 
+```kotlin
+fun main() = runBlocking {
+    val job = GlobalScope.launch {
+        launch {
+            println("${Thread.currentThread()}: block1 start")
+            delay(500L)
+            println("${Thread.currentThread()}: 1")
+            delay(500L)
+            println("${Thread.currentThread()}: 2")
+        }
+
+        coroutineScope {
+            launch {
+                println("${Thread.currentThread()}: block2 start")
+                delay(500L)
+                println("${Thread.currentThread()}: 3")
+                delay(500L)
+                println("${Thread.currentThread()}: 4")
+            }
+        }
+    }
+    delay(300)
+    println("cancel")
+    job.cancel()
+
+    job.join()
+
+    println("${Thread.currentThread()}: finish")
+}
+
+// 실행 결과
+Thread[DefaultDispatcher-worker-2,5,main]: block1 start
+Thread[DefaultDispatcher-worker-1,5,main]: block2 start
+cancel
+Thread[main,5,main]: finish
+```
+
+위 코드에서 GlobalScope.launch를 통해 비동기로 동작시켰고,<br>
+delay(300)이 되는 동안 block1과 block2가 출력되었고 cancel을 통해 코루틴을 종료시켰다.<br>
+그래서 나머지 코루틴 블럭의 나머지 코드가 실행되지 않았다.
+
+<br>
+
+coroutineScope를 runBlock으로 바꿔보면
+```kotlin
+fun main() = runBlocking {
+    val job = GlobalScope.launch {
+        launch {
+            println("${Thread.currentThread()}: block1 start")
+            delay(500L)
+            println("${Thread.currentThread()}: 1")
+            delay(500L)
+            println("${Thread.currentThread()}: 2")
+        }
+
+        runBlocking {
+            launch {
+                println("${Thread.currentThread()}: block2 start")
+                delay(500L)
+                println("${Thread.currentThread()}: 3")
+                delay(500L)
+                println("${Thread.currentThread()}: 4")
+            }
+        }
+    }
+    delay(300)
+    println("cancel")
+    job.cancel()
+
+    job.join()
+
+    println("${Thread.currentThread()}: finish")
+}
+
+// 실행 결과
+Thread[DefaultDispatcher-worker-2,5,main]: block1 start
+Thread[DefaultDispatcher-worker-1,5,main]: block2 start
+cancel
+Thread[DefaultDispatcher-worker-1,5,main]: 3
+Thread[DefaultDispatcher-worker-1,5,main]: 4
+Thread[main,5,main]: finish
+```
+코루틴을 종료시켰음에도 runBlocking의 코드들이 실행되었다.<br>
+coroutineScope가 부모 코루틴이 종료되는 것에 영향을 받은 반면,<br>
+runBlocking이 스레드를 차단하면서 해당 블록의 코드가 동작한 것이다. 
