@@ -71,12 +71,10 @@ runBlocking도 launch와 같은 코루틴 빌더이지만 다른 점이 있다.<
 runBlocking은 코루틴 범위 내의 작업이 완료될 때까지 스레드의 동작을 차단한다.<br>
 그래서 실행 결과 1, 2가 출력된 것이다.
 
-스레드를 건드리는(생성, 차단 등) 동작은 비효율적이라서<br>
-runBlocking은 실제 코드에서는 잘 안 쓰인다고 한다.
+스레드를 건드리는(생성, 차단 등) 동작은 비효율적이라서 runBlocking은 실제 코드에서는 잘 안 쓰인다고 한다.
 
 <br>
 
-메인 함수를 runBlocking으로 생성하여 메인 스레드가 종료되지 않도록 했다.
 ```kotlin
 fun main() = runBlocking {
     launch {
@@ -96,12 +94,11 @@ fun main() = runBlocking {
 delay는 일정 시간 동안 코루틴을 중단할 수 있다.<br>
 따라서 실행 결과가 2, 1이 아닌 1, 2가 출력되었다.
 
-
 ---
 part 2
 
 ---
-
+### Job
 지금까지 코루틴의 작업이 완료되는 것을 delay를 통해서 임의로 제어를 했다.<br>
 하지만 이 방식은 다른 코루틴의 작업이 언제 끝날지 알 수 없기 때문에 좋은 방법이 아니다.<br>
 
@@ -140,12 +137,16 @@ fun main() = runBlocking {
 1
 3
 ```
-launch라는 코루틴 빌더로 비동기로 동작이 수행된다.<br>
+launch라는 코루틴 빌더로 인해 비동기로 동작이 수행된다.<br>
 2가 출력되는 동안 launch의 코루틴 블록은 3초를 정지하게 되고<br>
 밖에서는 join을 만나 launch의 작업이 끝나기를 기다린다.<br>
 그 결과 2, 1, 3으로 출력되었다.
 
-<br>
+---
+
+
+
+---
 
 ### Scope builder
 스코프 빌더를 사용하면 코루틴 범위를 생성할 수 있다.<br>
@@ -209,12 +210,11 @@ Thread[DefaultDispatcher-worker-1,5,main]: block2 start
 cancel
 Thread[main,5,main]: finish
 ```
+- cancel : Job을 취소하는 함수
 
 위 코드에서 GlobalScope.launch를 통해 비동기로 동작시켰고,<br>
 delay(300)이 되는 동안 block1과 block2가 출력되었고 cancel을 통해 코루틴을 종료시켰다.<br>
 그래서 나머지 코루틴 블럭의 나머지 코드가 실행되지 않았다.
-
-<br>
 
 coroutineScope를 runBlock으로 바꿔보면
 ```kotlin
