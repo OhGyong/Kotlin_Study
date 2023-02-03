@@ -150,10 +150,6 @@ launch라는 코루틴 빌더로 인해 비동기로 동작이 수행된다.<br>
 
 ---
 
-
-
----
-
 ### Scope builder
 스코프 빌더를 사용하면 코루틴 범위를 생성할 수 있다.<br>
 스코프 빌더에는 coroutineScope가 있다.<br>
@@ -265,3 +261,9 @@ Thread[main,5,main]: finish
 
 coroutineScope가 부모 코루틴이 종료되는 것에 영향을 받은 반면<br>
 runBlocking이 현재 스레드의 동작을 차단하면서 cancel의 영향을 안받은게 아닐까 생각이 든다.
+
+---
+
+part3
+
+---
