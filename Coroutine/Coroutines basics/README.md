@@ -267,3 +267,36 @@ runBlocking이 현재 스레드의 동작을 차단하면서 cancel의 영향을
 part3
 
 ---
+
+### suspend
+
+```kotlin
+suspend fun doWorld() {
+    delay(500)
+    println("1")
+}
+
+fun main() = runBlocking {
+    launch { doWorld() }
+    launch { println("2") }
+    launch {
+        delay(500)
+        println("3")
+    }
+    println("4")
+}
+
+// 실행 결과
+4
+2
+1
+3
+```
+
+함수명 앞에 suspend라는 키워드가 붙으면 정지 함수를 의미한다.<br>
+suspend가 붙음으로써 delay 같은 실행, 정지 기능을 수행 할 수 있다. 
+
+위 코드 처럼 suspend를 사용하면 개별 함수로 분리가 가능하다.<br>
+주의 할 점은 suspend는 코루틴 빌더 또는 다른 suspend 함수 에서 호출되어야 한다.<br> 
+(앞에서 본 delay, join을 살펴보면 suspend로 선언되어있다.)
+
