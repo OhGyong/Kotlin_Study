@@ -35,8 +35,6 @@ GlobalScope.launch를 이용해 코루틴을 생성했고, 비동기로 동작�
 하지만 2가 출력된 이후에 main 함수가 종료되면서 메인 스레드가 종료됐다.<br>
 코루틴은 스레드 내에서 동작한다고 했는데, 스레드가 종료되었기 때문에 1이 출력되지 않은 것이다.
 
-<br>
-
 1이 출력되는 것을 확인하려면 main 함수의 종료를 막아야한다.
 ```kotlin
 fun main() {
@@ -54,9 +52,7 @@ fun main() {
 
 함수의 마지막에 스레드를 1초간 정지시켜 코루틴 블록의 코드가 수행되도록 했다.
 
-<br>
-
-다른 방법으로는 runBlocking을 사용하는 것이다.
+다른 방법으로는 코루틴의 runBlocking을 사용하는 것이다.
 ```kotlin
 fun main() {
     runBlocking {
@@ -71,7 +67,7 @@ fun main() {
 ```
 - runBlocking : 코루틴 빌더
 
-runBlocking도 launch와 같은 코루틴 빌더이지만<br>
+runBlocking도 launch와 같은 코루틴 빌더이지만 다른 점이 있다.<br>
 runBlocking은 코루틴 범위 내의 작업이 완료될 때까지 스레드의 동작을 차단한다.<br>
 그래서 실행 결과 1, 2가 출력된 것이다.
 
