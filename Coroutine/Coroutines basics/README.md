@@ -256,6 +256,7 @@ Thread[DefaultDispatcher-worker-1,5,main]: 3
 Thread[DefaultDispatcher-worker-1,5,main]: 4
 Thread[main,5,main]: finish
 ```
-코루틴을 종료시켰음에도 runBlocking의 코드들이 실행되었다.<br>
-coroutineScope가 부모 코루틴이 종료되는 것에 영향을 받은 반면,<br>
-runBlocking이 스레드를 차단하면서 해당 블록의 코드가 동작한 것이다. 
+코루틴을 종료시켰음에도 runBlocking 블록의 코드들이 실행되었다.<br>
+
+coroutineScope가 부모 코루틴이 종료되는 것에 영향을 받은 반면<br>
+runBlocking이 현재 스레드의 동작을 차단하면서 cancel의 영향을 안받은게 아닐까 생각이 든다.
