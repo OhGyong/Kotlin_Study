@@ -309,7 +309,7 @@ suspend가 붙음으로써 delay 같은 실행, 정지 기능을 수행 할 수 
     var time: Long? = null
     launch {
         time = measureTimeMillis {
-            repeat(100000) { // launch a lot of coroutines
+            repeat(100000) {
                 launch {
                     delay(2000L)
                     print(.)
@@ -328,7 +328,7 @@ suspend가 붙음으로써 delay 같은 실행, 정지 기능을 수행 할 수 
 ```kotlin
 fun main() = runBlocking {
     val time = measureTimeMillis {
-        repeat(100000) { // launch a lot of coroutines
+        repeat(100000) {
             Thread {
                 Thread.sleep(2000L)
                 print(.)
