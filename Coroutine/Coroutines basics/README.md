@@ -300,3 +300,48 @@ suspend가 붙음으로써 delay 같은 실행, 정지 기능을 수행 할 수 
 주의 할 점은 suspend는 코루틴 빌더 또는 다른 suspend 함수 에서 호출되어야 한다.<br> 
 (앞에서 본 delay, join을 살펴보면 suspend로 선언되어있다.)
 
+---
+
+### 코루틴의 가벼움
+
+ ```kotlin
+ fun main() = runBlocking {
+    var time: Long? = null
+    launch {
+        time = measureTimeMillis {
+            repeat(100000) { // launch a lot of coroutines
+                launch {
+                    delay(2000L)
+                    print(.)
+                }
+            }
+        }
+    }.join()
+
+    println(time)
+}
+
+// 실행 결과
+138
+ ```
+
+```kotlin
+fun main() = runBlocking {
+    val time = measureTimeMillis {
+        repeat(100000) { // launch a lot of coroutines
+            Thread {
+                Thread.sleep(2000L)
+                print(.)
+            }.start()
+        }
+    }
+
+    println(time)
+}
+
+// 실행 결과
+51023
+```
+
+100000개의 서로 다른 코루틴과 스레드를 실행하여 점(.) 완전히 찍는데 걸리는 시간을 측정했다.<br>
+코루틴은 138, 스레드는 51023으로 코루틴이 훨씬 가볍다는 것을 알 수 있다.
