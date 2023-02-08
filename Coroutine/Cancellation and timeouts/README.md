@@ -8,7 +8,7 @@
 launch 함수는 Job 객체를 반환하고 Job 객체는 취소될 수 있다.
 
 ```kotlin
-fun main(args: Array<String>) = runBlocking {
+fun main() = runBlocking {
     val job = launch {
         repeat(1000) { i ->
             println("job: I'm sleeping $i ...")
@@ -36,6 +36,8 @@ cancel은 실행 중인 코루틴의 Job을 취소한다.
 
 위 코드를 보면 1.3초가 지난 뒤에 반복문이 더 이상 돌아가지 않는 것을 확인 할 수 있다.
 
+
+
 ---
 ### CancellationException
 
@@ -44,7 +46,7 @@ cancel은 실행 중인 코루틴의 Job을 취소한다.
 정지 함수는 코루틴이 취소되는지를 계속 체크를 하고, 취소가 되면 CancellationException을 발생시킨다.
 
 ```kotlin
-fun main(args: Array<String>) = runBlocking {
+fun main() = runBlocking {
     val job = launch {
         try{
             repeat(1000) { i ->
@@ -77,7 +79,7 @@ main: Now I can quit.
 
 아래 코드를 보자.
 ```kotlin
-fun main(args: Array<String>) = runBlocking {
+fun main() = runBlocking {
     val startTime = System.currentTimeMillis()
     val job = launch(Dispatchers.Default) {
         try {
@@ -97,6 +99,7 @@ fun main(args: Array<String>) = runBlocking {
     delay(1300L) // delay a bit
     println("main: I'm tired of waiting!")
     job.cancel()
+    job.join()
     println("main: Now I can quit.")
 }
 
@@ -105,15 +108,53 @@ job: I'm sleeping 0 ...
 job: I'm sleeping 1 ...
 job: I'm sleeping 2 ...
 main: I'm tired of waiting!
-main: Now I can quit.
 job: I'm sleeping 3 ...
 job: I'm sleeping 4 ...
+main: Now I can quit.
 ```
 
-while문이 계속 실행되고 있기 때문에 cancel 함수를 사용했음에도 반복문의 코드가 계속 수행되었다.
+while 블록이 계속 실행되고 있기 때문에 cancel 함수를 사용했음에도 반복문의 코드가 계속 수행되었다.
 
 CancellationException도 체크하지 못했는지 catch 블록의 코드도 동작하지 않았다.
 
+```kotlin
+fun main() = runBlocking {
+    val startTime = System.currentTimeMillis()
+    val job = launch(Dispatchers.Default) {
+        try {
+            var nextPrintTime = startTime
+            var i = 0
+            while (i < 5) { // computation loop, just wastes CPU
+                // print a message twice a second
+                if (System.currentTimeMillis() >= nextPrintTime) {
+                    println("job: I'm sleeping ${i++} ...")
+                    nextPrintTime += 500L
+                    delay(10)
+                }
+            }
+        } catch (e:Exception) {
+            println("exception 발생")
+        }
+    }
+    delay(1300L) // delay a bit
+    println("main: I'm tired of waiting!")
+    job.cancel()
+    job.join()
+    println("main: Now I can quit.")
+}
+
+// 실행 결과
+job: I'm sleeping 0 ...
+job: I'm sleeping 1 ...
+job: I'm sleeping 2 ...
+main: I'm tired of waiting!
+job: I'm sleeping 3 ...
+exception 발생
+main: Now I can quit.
+```
+
+만약에 while 블록에 delay를 사용하여 코루틴을 정지시키면<br>
+계산이 종료되기 때문에 CancellationException을 체크하게 된다.
 
 ### cancelAndJoin
 cancelAndJoin은 cancel과 join을 결합한 Job의 확장함수  
