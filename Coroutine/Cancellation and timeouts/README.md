@@ -71,9 +71,9 @@ exception 발생 : kotlinx.coroutines.JobCancellationException: StandaloneCorout
 main: Now I can quit.
 ```
 
-위 코드에서 try-catch을 추가하여 CancellationException이 발생했는지 확인했다.
+위 코드처럼 코루틴 블록에 try-catch을 추가하여 CancellationException이 발생했는지 확인할 수 있다.
 
-하지만 코루틴이 계산 작업을 하고 있다면, 취소 요청을 체크하지 못해 코루틴이 취소되지 않는다.
+만약, 코루틴이 계산 작업을 하고 있거나, CancellationException을 따로 체크하지 않으면 코루틴을 취소할 수 없다.
 
 아래 코드를 보자.
 ```kotlin
@@ -110,9 +110,9 @@ job: I'm sleeping 3 ...
 job: I'm sleeping 4 ...
 ```
 
-반복문 속에서 연산작업이 수행되고 있고, cancel 함수를 사용했음에도 반복문의 코드가 계속 수행되었다.
+while문이 계속 실행되고 있기 때문에 cancel 함수를 사용했음에도 반복문의 코드가 계속 수행되었다.
 
-물론, CancellationException도 체크하지 못했는지 catch 블록의 코드도 동작하지 않았다.
+CancellationException도 체크하지 못했는지 catch 블록의 코드도 동작하지 않았다.
 
 
 ### cancelAndJoin
