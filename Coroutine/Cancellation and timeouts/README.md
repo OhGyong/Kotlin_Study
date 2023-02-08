@@ -138,8 +138,7 @@ fun main() = runBlocking {
     }
     delay(1300L) // delay a bit
     println("main: I'm tired of waiting!")
-    job.cancel()
-    job.join()
+    job.cancelAndJoin()
     println("main: Now I can quit.")
 }
 
@@ -156,5 +155,9 @@ main: Now I can quit.
 만약에 while 블록에 delay를 사용하여 코루틴을 정지시키면<br>
 계산이 종료되기 때문에 CancellationException을 체크하게 된다.
 
-### cancelAndJoin
-cancelAndJoin은 cancel과 join을 결합한 Job의 확장함수  
+**cancelAndJoin**<br>
+~~~ 
+cancelAndJoin은 cancel과 join을 결합한 Job의 확장함수다.
+cancelAndJoin을 사용하면 위의 코드들에서 cancel과 join을 연달아서 작성할 필요가 없다.
+~~~
+
