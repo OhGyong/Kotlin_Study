@@ -231,3 +231,73 @@ fun main() = runBlocking {
 두 번째 방법으로는 isActive를 사용할 수 있다.
 
 isActive는 코루틴 범위에서만 사용할 수 있는 확장 속성으로 코루틴이 비활성 상태인지 확인할 수 있다.
+
+---
+
+### 리소스 종료하기
+코루틴 블록에서 예외가 발생하거나 구문이 끝나고 리소스를 종료시켜야 하는 상황이 있다.
+
+이럴 때 finally 또는 use를 사용하면 된다.
+
+
+아래 코드는 finally를 사용하여 리소스를 종료시켰다.
+```kotlin
+fun main() = runBlocking {
+    val job = launch {
+        try {
+            repeat(1000) { i ->
+                println("job: I'm sleeping $i ...")
+                delay(500L)
+            }
+        } finally {
+            println("job: I'm running finally")
+        }
+    }
+    delay(1300L) // delay a bit
+    println("main: I'm tired of waiting!")
+    job.cancelAndJoin() // cancels the job and waits for its completion
+    println("main: Now I can quit.")
+}
+
+// 실행 결과
+job: I'm sleeping 0 ...
+job: I'm sleeping 1 ...
+job: I'm sleeping 2 ...
+main: I'm tired of waiting!
+job: I'm running finally
+main: Now I can quit.
+```
+
+<br>
+
+아래 코드는 use를 사용하여 리소스를 종료시켰다.
+```kotlin
+fun main() = runBlocking {
+    val job = launch {
+        ClosingCoroutine().use {
+            repeat(1000) { i ->
+                println("job: I'm sleeping $i ...")
+                delay(500L)
+            }
+        }
+    }
+    delay(1300L) // delay a bit
+    println("main: I'm tired of waiting!")
+    job.cancelAndJoin() // cancels the job and waits for its completion
+    println("main: Now I can quit.")
+}
+
+class ClosingCoroutine : Closeable {
+    override fun close() {
+        println("closing coroutine")
+    }
+}
+
+// 실행 결과
+job: I'm sleeping 0 ...
+job: I'm sleeping 1 ...
+job: I'm sleeping 2 ...
+main: I'm tired of waiting!
+closing coroutine
+main: Now I can quit.
+```
