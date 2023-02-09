@@ -161,3 +161,73 @@ main: Now I can quit.
 cancelAndJoin은 cancel과 join을 결합한 Job의 확장함수다.
 cancelAndJoin을 사용하면 위의 코드들에서 cancel과 join을 연달아서 작성할 필요가 없다.
 ~~~
+
+---
+
+### 계산 중인 코루틴 영역 취소시키기
+
+계산 중인 코루틴 영역을 취소시키는 방법으로 두 가지가 있다.
+
+첫 번째는 취소를 체크하도록 하는 정지 함수를 주기적으로 호출하는 것이고,
+
+두 번째는 취소 상태를 명시적으로 체크하는 것이다.
+
+```kotlin
+fun main() = runBlocking {
+    val startTime = System.currentTimeMillis()
+    val job = launch(Dispatchers.Default) {
+        var nextPrintTime = startTime
+        var i = 0
+        while (i<5) { // cancellable computation loop
+            // print a message twice a second
+            if (System.currentTimeMillis() >= nextPrintTime) {
+                yield()
+                println("job: I'm sleeping ${i++} ...")
+                nextPrintTime += 500L
+            }
+        }
+    }
+    delay(1300L) // delay a bit
+    println("main: I'm tired of waiting!")
+    job.cancelAndJoin() // cancels the job and waits for its completion
+    println("main: Now I can quit.")
+}
+
+// 실행 결과
+job: I'm sleeping 0 ...
+job: I'm sleeping 1 ...
+job: I'm sleeping 2 ...
+main: I'm tired of waiting!
+main: Now I can quit.
+```
+
+첫 번째 방법으로 yield를 사용할 수 있다.
+
+yield는 정지되지 않아도 취소 항상 여부를 확인하며,<br>
+Job이 취소되거나 완료되면  CancellationException으로 재개된다.
+
+<br>
+
+```kotlin
+fun main() = runBlocking {
+    val startTime = System.currentTimeMillis()
+    val job = launch(Dispatchers.Default) {
+        var nextPrintTime = startTime
+        var i = 0
+        while (isActive) { // cancellable computation loop
+            // print a message twice a second
+            if (System.currentTimeMillis() >= nextPrintTime) {
+                println("job: I'm sleeping ${i++} ...")
+                nextPrintTime += 500L
+            }
+        }
+    }
+    delay(1300L) // delay a bit
+    println("main: I'm tired of waiting!")
+    job.cancelAndJoin() // cancels the job and waits for its completion
+    println("main: Now I can quit.")
+}
+```
+두 번째 방법으로는 isActive를 사용할 수 있다.
+
+isActive는 코루틴 범위에서만 사용할 수 있는 확장 속성으로 코루틴이 비활성 상태인지 확인할 수 있다.
