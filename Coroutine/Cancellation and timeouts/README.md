@@ -438,3 +438,77 @@ Exception in thread "main" kotlinx.coroutines.TimeoutCancellationException ...
 실행 결과를 보면 TimeoutCancellationException이 발생하는데 이는 CancellationException의 하위 클래스다.
 
 try-catch로 처리를 하거나 withTimeoutOrNull을 사용하여 해결할 수 있다.
+
+---
+
+### withTimeout 자원 누수 막기
+withTimeout도 비동기적으로 실행되기 때문에 블록 내부에서 자원이 반환되기 전에 리소스의 값이 제대로 할당 되지 않을 수 있다.
+
+```kotlin
+var acquired = 0
+
+class Resource {
+    init { acquired++ } // Acquire the resource
+    fun close() { acquired-- } // Release the resource
+}
+
+fun main() {
+    runBlocking {
+        repeat(100_000) { // Launch 100K coroutines
+            launch {
+                val resource = withTimeout(60) { // Timeout of 60 ms
+                    delay(50) // Delay for 50 ms
+                    Resource() // Acquire a resource and return it from withTimeout block
+                }
+                resource.close() // Release the resource
+            }
+        }
+    }
+    // Outside of runBlocking all coroutines have completed
+    println(acquired) // Print the number of resources still acquired
+}
+
+// 실행 결과
+1589
+```
+위 코드를 보면 acquired 값이 항상 0이 나와야 될 것 같지만, 막상 결과를 보면 그렇지 않다.
+
+이러한 문제를 해결하려면 블록 내부에서 리소스를 반환하는 것이 아니라<br>
+블록 외부의 변수에 리소스를 참조하고 해당 변수에 값을 지정해야한다.
+
+아래 코드를 보자.
+
+```kotlin
+var acquired = 0
+
+class Resource {
+    init { acquired++ } // Acquire the resource
+    fun close() { acquired-- } // Release the resource
+}
+
+fun main() {
+    runBlocking {
+        repeat(100_000) { // Launch 100K coroutines
+            launch {
+                var resource: Resource? = null // Not acquired yet
+                try {
+                    withTimeout(60) { // Timeout of 60 ms
+                        delay(50) // Delay for 50 ms
+                        resource = Resource() // Store a resource to the variable if acquired
+                    }
+                    // We can do something else with the resource here
+                } finally {
+                    resource?.close() // Release the resource if it was acquired
+                }
+            }
+        }
+    }
+    // Outside of runBlocking all coroutines have completed
+    println(acquired) // Print the number of resources still acquired
+}
+
+// 실행 결과
+0
+```
+
+withTimeout 블록에서 리소스를 반환하는 대신 외부 변수에 리소스를 저장한 결과 0만 출력되었다.
