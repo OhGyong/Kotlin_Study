@@ -304,5 +304,82 @@ main: Now I can quit.
 
 --- 
 
-### Run non-cancellable block
-작성 예정
+### 취소가 불가능한 코드 블록의 실행 (Run non-cancellable block)
+
+```kotlin
+fun main() = runBlocking {
+    val job = launch {
+        try {
+            repeat(3) { i ->
+                println("job: I'm sleeping $i ...")
+                delay(400L)
+            }
+        } catch (e:Exception) {
+            println("Exception 1")
+        }finally {
+            try {
+                delay(1000L)
+                println("정지")
+            }catch (e:Exception) {
+                println("Exception 2")
+            }
+
+        }
+    }
+    delay(1100L) // delay a bit
+    println("main: I'm tired of waiting!")
+    job.cancelAndJoin()
+    println("main: Now I can quit.")
+}
+// 실행 결과
+job: I'm sleeping 1 ...
+job: I'm sleeping 2 ...
+main: I'm tired of waiting!
+Exception 1
+Exception 2
+main: Now I can quit.
+```
+
+코루틴의 finally 블록에서 정지 함수를 사용할 때 코루틴 블록에서 CancellableException이 발생하면
+
+코루틴은 취소가 된 상태이기 때문에 finally 블록은 정지 함수를 사용하지 못하고 CancellationException이 발생하게 된다.<br>
+(finally 블록에서 "정지"가 출력되지 않은 이유)
+
+하지만 보통 이것은 문제 되지는 않는다. 리소스를 종료시키는 블록에서는 일반적으로 정지 함수를 사용하지 않기 때문이다.
+
+```kotlin
+fun main() = runBlocking {
+    val job = launch {
+        try {
+            repeat(1000) { i ->
+                println("job: I'm sleeping $i ...")
+                delay(500L)
+            }
+        } finally {
+            withContext(NonCancellable) {
+                println("job: I'm running finally")
+                delay(1000L)
+                println("job: And I've just delayed for 1 sec because I'm non-cancellable")
+            }
+        }
+    }
+    delay(1300L) // delay a bit
+    println("main: I'm tired of waiting!")
+    job.cancelAndJoin() // cancels the job and waits for its completion
+    println("main: Now I can quit.")
+}
+
+// 실행 결과
+job: I'm sleeping 0 ...
+job: I'm sleeping 1 ...
+job: I'm sleeping 2 ...
+main: I'm tired of waiting!
+job: I'm running finally
+job: And I've just delayed for 1 sec because I'm non-cancellable
+main: Now I can quit.
+```
+
+그럼에도 정지 함수를 사용해야 하는 경우, withContext에 NonCancellable를 전달하여 이를 해결할 수 있다.<br>
+([NonCancellabe 참고](https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-non-cancellable/))
+
+---
