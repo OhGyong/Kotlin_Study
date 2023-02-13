@@ -383,3 +383,58 @@ main: Now I can quit.
 ([NonCancellabe 참고](https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-non-cancellable/))
 
 ---
+### Timeout
+코루틴의 실행 시간이 너무 길어지는 경우 취소 요청을 보내지 않더라도 코루틴을 종료시켜야 한다.
+
+```kotlin
+fun main() = runBlocking {
+    val job = launch {
+        repeat(1000) { i ->
+            println("I'm sleeping $i ...")
+            delay(500L)
+        }
+    }
+
+    launch {
+        delay(1300L)
+        job.cancelAndJoin()
+        println("job finish")
+    }.join()
+}
+
+// 실행 결과
+I'm sleeping 0 ...
+I'm sleeping 1 ...
+I'm sleeping 2 ...
+job finish
+```
+
+job 코루틴 블록에 반복문을 수행시키고, 별도의 코루틴 블록을 생성하여<br>
+1.3초 후 job 코루틴을 종료하도록 했다.
+
+위 코드처럼 별도의 코루틴을 생성하여 Job을 참조하여 수동으로 취소를 시키는 방법이 있지만 번거롭다.
+
+코루틴은 withTimeout 함수를 이용해 이를 해결할 수 있다.
+
+withTimeout 함수에 제한 시간을 걸어주면 코루틴은 종료된다.
+
+```kotlin
+fun main() = runBlocking {
+    withTimeout(1300L) {
+        repeat(1000) { i ->
+            println("I'm sleeping $i ...")
+            delay(500L)
+        }
+    }
+}
+
+// 실행 결과
+I'm sleeping 0 ...
+I'm sleeping 1 ...
+I'm sleeping 2 ...
+Exception in thread "main" kotlinx.coroutines.TimeoutCancellationException ...
+```
+
+실행 결과를 보면 TimeoutCancellationException이 발생하는데 이는 CancellationException의 하위 클래스다.
+
+try-catch로 처리를 하거나 withTimeoutOrNull을 사용하여 해결할 수 있다.
