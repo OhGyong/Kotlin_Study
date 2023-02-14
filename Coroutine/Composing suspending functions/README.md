@@ -204,11 +204,14 @@ CoroutineStart.LAZY를 전달한 상태에서 start나 await을 사용하지 않
 예시로 GlobalScope에 async 코루틴 빌더를 사용하여 비동기 스타일의 함수를 작성할 수 있다.
 
 ```kotlin
+// note that we don't have `runBlocking` to the right of `main` in this example
 fun main() {
     val time = measureTimeMillis {
+        // we can initiate async actions outside of a coroutine
         val one = somethingUsefulOneAsync()
         val two = somethingUsefulTwoAsync()
-
+        // but waiting for a result must involve either suspending or blocking.
+        // here we use `runBlocking { ... }` to block the main thread while waiting for the result
         runBlocking {
             println("The answer is ${one.await() + two.await()}")
         }
@@ -217,18 +220,26 @@ fun main() {
 }
 
 fun somethingUsefulOneAsync() = GlobalScope.async {
-    delay(2000L) // pretend we are doing something useful here
-    13
+    doSomethingUsefulOne()
 }
 
 fun somethingUsefulTwoAsync() = GlobalScope.async {
-    delay(1000L)
-    29
+    doSomethingUsefulTwo()
+}
+
+suspend fun doSomethingUsefulOne(): Int {
+    delay(2000L) // pretend we are doing something useful here
+    return 13
+}
+
+suspend fun doSomethingUsefulTwo(): Int {
+    delay(1000L) // pretend we are doing something useful here, too
+    return 29
 }
 
 // 실행 결과
 The answer is 42
-Completed in 2050 ms
+Completed in 2132 ms
 ```
 
 async를 사용한 함수 스타일은 다른 프로그래밍 언어에서 널리 사용되지만<br>
@@ -236,3 +247,7 @@ async를 사용한 함수 스타일은 다른 프로그래밍 언어에서 널�
 
 ~Async 함수와 await 함수 사이에 오류가 발생하여 코루틴이 중단되어도<br>
 여전히 ~Async 함수가 백그라운드에서 실행될 가능성이 있어 문제가 된다고 한다.
+
+---
+
+
