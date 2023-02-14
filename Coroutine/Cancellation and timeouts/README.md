@@ -1,5 +1,7 @@
 [Cancellatin and timeouts](https://kotlinlang.org/docs/cancellation-and-timeouts.html)
 
+---
+
 ### 코루틴의 실행 취소
 장시간 실행되는 앱에서 동작하는 코루틴을 세밀하게 제어할 수 있어야 한다.
 
