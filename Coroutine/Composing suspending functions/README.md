@@ -196,3 +196,43 @@ CoroutineStart.LAZY를 전달한 상태에서 start나 await을 사용하지 않
 해당 코루틴 블록은 실행되지 않는다.
 
 ---
+
+### Async를 사용한 함수 스타일
+
+우리는 async 스타일의 함수를 정의할 수 있다.
+
+예시로 GlobalScope에 async 코루틴 빌더를 사용하여 비동기 스타일의 함수를 작성할 수 있다.
+
+```kotlin
+fun main() {
+    val time = measureTimeMillis {
+        val one = somethingUsefulOneAsync()
+        val two = somethingUsefulTwoAsync()
+
+        runBlocking {
+            println("The answer is ${one.await() + two.await()}")
+        }
+    }
+    println("Completed in $time ms")
+}
+
+fun somethingUsefulOneAsync() = GlobalScope.async {
+    delay(2000L) // pretend we are doing something useful here
+    13
+}
+
+fun somethingUsefulTwoAsync() = GlobalScope.async {
+    delay(1000L)
+    29
+}
+
+// 실행 결과
+The answer is 42
+Completed in 2050 ms
+```
+
+async를 사용한 함수 스타일은 다른 프로그래밍 언어에서 널리 사용되지만<br>
+코틀린의 코루틴과 함께 이러한 스타일 사용하는 것은 권장되지 않는다.
+
+~Async 함수와 await 함수 사이에 오류가 발생하여 코루틴이 중단되어도<br>
+여전히 ~Async 함수가 백그라운드에서 실행될 가능성이 있어 문제가 된다고 한다.
