@@ -250,4 +250,103 @@ async를 사용한 함수 스타일은 다른 프로그래밍 언어에서 널�
 
 ---
 
+### async를 사용하여 구조화된 동시성 만들기
+async 함수는 CoroutineScope의 확장 함수로 정의되어 있기 때문에<br>
+coroutineScope 안에서 async를 호출할 수 있다.
+
+```kotlin
+fun main() = runBlocking<Unit> {
+    val time = measureTimeMillis {
+        println("The answer is ${concurrentSum()}")
+    }
+    println("Completed in $time ms")
+}
+
+suspend fun concurrentSum(): Int = coroutineScope {
+    val one = async { doSomethingUsefulOne() }
+    val two = async { doSomethingUsefulTwo() }
+    one.await() + two.await()
+}
+
+suspend fun doSomethingUsefulOne(): Int {
+    delay(2000L) // pretend we are doing something useful here
+    return 13
+}
+
+suspend fun doSomethingUsefulTwo(): Int {
+    delay(1000L) // pretend we are doing something useful here, too
+    return 29
+}
+
+// 실행 결과
+The answer is 42
+Completed in 2025 ms
+```
+
+위와 같은 코드로 작성하면 동시성을 챙길 수 있고<br>
+concurrentSum 함수에서 문제가 발생했을 때 해당 범위의 모든 코루틴이 취소된다.<br>
+
+
+Exception을 발생시켜서 확인해보자.
+```kotlin
+fun main() = runBlocking {
+    try {
+        val time = measureTimeMillis {
+            println("The answer is ${concurrentSum()}")
+        }
+        println("Completed in $time ms")
+    } catch (e: ArithmeticException) {
+        println("Computation failed with ArithmeticException")
+    }
+}
+
+suspend fun concurrentSum(): Int = coroutineScope {
+    val one = async {
+        try {
+            doSomethingUsefulOne()
+        }catch (e: Exception) {
+            println("one : ArithmeticException")
+        }
+        0
+    }
+
+    val two = async {
+        delay(5000L)
+        throw ArithmeticException()
+        doSomethingUsefulTwo()
+    }
+
+    one.await() + two.await()
+}
+
+suspend fun doSomethingUsefulOne(): Int {
+    repeat(5) {
+        delay(2000L)
+        println("doSomethingUsefulOne $it")
+    }
+    return 13
+}
+
+suspend fun doSomethingUsefulTwo(): Int {
+    repeat(5) {
+        delay(5000L)
+        println("doSomethingUsefulTwo $it")
+    }
+    return 29
+}
+
+// 실행 결과
+doSomethingUsefulOne 0
+doSomethingUsefulOne 1
+one : ArithmeticException
+Computation failed with ArithmeticException
+```
+
+concurrentSum 함수가 호출되고 doSomethingUsefulOne에서 2초마다 "doSomethingUsefulOne"이 출력된다.
+
+5초 뒤에 two 변수에서 Exception이 발생하면서 동작하고 있던 one 변수의 async가 종료되었고<br>
+main 함수에서도 catch 블록이 실행된 것을 확인할 수 있다.
+
+부모 async에서 자식 async 하나가 종료되면<br>
+부모 async와 같은 필드의 async가 모두 종료되는 것을 참고하자.
 
