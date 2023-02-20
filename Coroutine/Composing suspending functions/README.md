@@ -291,10 +291,7 @@ Exception을 발생시켜서 확인해보자.
 ```kotlin
 fun main() = runBlocking {
     try {
-        val time = measureTimeMillis {
-            println("The answer is ${concurrentSum()}")
-        }
-        println("Completed in $time ms")
+        println("The answer is ${concurrentSum()}")
     } catch (e: ArithmeticException) {
         println("Computation failed with ArithmeticException")
     }
