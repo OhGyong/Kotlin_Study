@@ -1,1 +1,57 @@
 [Coroutine context and dispatchers](https://kotlinlang.org/docs/coroutine-context-and-dispatchers.html)
+
+---
+
+### Dispatchers and threads
+
+코루틴은 항상 코틀린 표준 라이브러리로 정의된 CoroutineContext에 의해 표시되는 일부 컨텍스트에서 실행된다.
+
+코루틴 컨텍스트는 다양한 요소의 집합으로, 주 요소는 Job과 Dispatcher라고 할 수 있다.
+
+코루틴 디스패처는 코루틴의 실행을 위해 사용되는 스레드를 결정한다.</br>
+(코루틴을 특정 스레드로 제한, 스레드 풀로 디스패치, 아무 제한 없이 실행)
+
+launch와 async 같은 코루틴 빌더는 선택적으로 CoroutineContext를 파라미터로 받는다.<br>
+파라미터인 CoroutineContext는 새 코루틴 또는 컨텍스트 요소를 위해 명시적으로 지정하는데 사용된다.
+
+```kotlin
+fun main(args: Array<String>) = runBlocking<Unit> {
+    // 1
+    launch {
+        // context of the parent, main runBlocking coroutine
+        println("main runBlocking      : I'm working in thread ${Thread.currentThread().name}")
+    }
+
+    // 2
+    launch(Dispatchers.Unconfined) {
+        // not confined -- will work with main thread
+        println("Unconfined            : I'm working in thread ${Thread.currentThread().name}")
+    }
+
+    // 3
+    launch(Dispatchers.Default) {
+        // will get dispatched to DefaultDispatcher
+        println("Default               : I'm working in thread ${Thread.currentThread().name}")
+    }
+
+    // 4
+    launch(newSingleThreadContext("MyOwnThread")) {
+        // will get its own new thread
+        println("newSingleThreadContext: I'm working in thread ${Thread.currentThread().name}")
+    }
+}
+
+// 실행 결과
+Unconfined            : I'm working in thread main
+Default               : I'm working in thread DefaultDispatcher-worker-1
+main runBlocking      : I'm working in thread main
+newSingleThreadContext: I'm working in thread MyOwnThread
+```
+
+1. launch 함수가 파라미터 없이 호출될 경우에는 현재 코루틴 범위에 해당하는 컨텍스트를 사용한다.
+2. Unconfined는 자신이 호출된 스레드에서 동작한다. → 위 코드에서 메인 스레드로 나온 이유는 메인 스레드에서 호출됐기 때문
+3. Default는 코루틴 범위 내에서 명시된 디스패처가 없는 경우에 쓰이고, 공용 백그라운드 스레드 풀을 사용한다.  
+4. newSingleThreadContext은 코루틴이 실행되도록 스레드를 새로 생성한다. → 해당 코루틴을 위해 생성된 스레드이므로 필요가 없을 때는 닫아줘야한다.
+
+---
+
