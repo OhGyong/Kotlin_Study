@@ -15,7 +15,7 @@ launch와 async 같은 코루틴 빌더는 선택적으로 CoroutineContext를 �
 파라미터인 CoroutineContext는 새 코루틴 또는 컨텍스트 요소를 위해 명시적으로 지정하는데 사용된다.
 
 ```kotlin
-fun main(args: Array<String>) = runBlocking<Unit> {
+fun main() = runBlocking<Unit> {
     // 1
     launch {
         // context of the parent, main runBlocking coroutine
@@ -54,4 +54,3 @@ newSingleThreadContext: I'm working in thread MyOwnThread
 4. newSingleThreadContext은 코루틴이 실행되도록 스레드를 새로 생성한다. → 해당 코루틴을 위해 생성된 스레드이므로 필요가 없을 때는 닫아줘야한다.
 
 ---
-
