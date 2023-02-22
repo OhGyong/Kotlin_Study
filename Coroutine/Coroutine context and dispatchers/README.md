@@ -91,7 +91,7 @@ main runBlocking: After delay in thread main
 
 <br>
 
-참고로 unconfined 디스패처는 사이드 이펙트를 발생시킬 수 있는 고급 메커니즘으로<br>
-일반 코드에서 사용하지 않는 것을 추천하고 있다.
+참고로 unconfined 디스패처는 사이드 이펙트를 발생시킬 수 있는 고급 메커니즘으로 일반 코드에서 사용하지 않는 것을 추천하고 있다.
 
 ---
+
