@@ -95,3 +95,23 @@ main runBlocking: After delay in thread main
 
 ---
 
+### 컨텍스트에서의 Job
+코루틴의 Job은 컨텍스트의 일부분이며 **`coroutineContext[Job]`**을 사용하여 Job을 얻을 수 있다.
+
+```kotlin
+fun main() = runBlocking {
+    println("My job is ${coroutineContext[Job]}")
+    println("Active is ${coroutineContext[Job]?.isActive}")
+}
+
+// 실행 결과
+My job is BlockingCoroutine{Active}@335eadca
+Active is true
+```
+
+위의 코드를 보면 `coroutineContext[Job]?.isActive`가 Cancellation and timeouts에서 다뤘던<br>
+isActive의 간략한 표현임을 알 수 있다.
+
+isActive 뿐만 아니라 Job의 여러 확장 함수들이 축약 표현으로 사용되었다.
+
+---
