@@ -115,3 +115,57 @@ isActive의 간략한 표현임을 알 수 있다.
 isActive 뿐만 아니라 Job의 여러 확장 함수들이 축약 표현으로 사용되었다.
 
 ---
+
+### 코루틴의 자식
+
+어떤 코루틴을 다른 코루틴의 CoroutineScope에서 생성하면 다른 코루틴의 coroutineContext를 통해<br>
+컨텍스트를 상속하고, 부모-자식 관계를 형성하게 된다.
+
+새로 생성된 코루틴의 Job도 상위 코루틴 Job의 자식이 되고, 부모 코루틴이 종료되면 자식 코루틴도 재귀적으로 종료된다.
+
+하지만 다음 두 가지 방법으로 이러한 룰을 무시할 수 있다.
+1. CoroutineScope의 범위를 명시적으로 표시한 경우(ex-GlobalScope 사용) 해당 범위 내에서는 코루틴이 독립적으로 동작한다.
+2. 다른 Job 객체가 새 코루틴의 컨텍스트로 전달되면 상위 범위의 Job을 재정의한다.
+
+이 두 방법은 아래의 코드에서 확인할 수 있다.
+
+```kotlin
+fun main() = runBlocking {
+    // launch a coroutine to process some kind of incoming request
+    val request = launch {
+        // it spawns two other jobs
+        launch(Job()) {
+            println("job1: 새로운 Context를 전달 받음")
+            delay(1000)
+            println("job1: 영향을 받지 않았음")
+        }
+        // and the other inherits the parent context
+        launch {
+            delay(100)
+            println("job2: 일반적인 자식 코루틴")
+            delay(1000)
+            println("job2: 호출이 안 됨")
+        }
+        GlobalScope.launch {
+            delay(200)
+            println("job3: Scope를 명시적으로 표시함")
+            delay(1000)
+            println("job3: 영향을 받지 않았음")
+        }
+    }
+    delay(500)
+    request.cancel() // cancel processing of the request
+    println("main: Who has survived request cancellation?")
+    delay(1000) // delay the main thread for a second to see what happens
+}
+
+// 실행 결과
+job1: 새로운 Context를 전달 받음
+job2: 일반적인 자식 코루틴
+job3: Scope를 명시적으로 표시함
+main: Who has survived request cancellation?
+job1: 영향을 받지 않았음
+job3: 영향을 받지 않았음
+```
+
+---
