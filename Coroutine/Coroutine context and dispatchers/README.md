@@ -54,3 +54,44 @@ newSingleThreadContext: I'm working in thread MyOwnThread
 4. newSingleThreadContext은 코루틴이 실행되도록 스레드를 새로 생성한다. → 해당 코루틴을 위해 생성된 스레드이므로 필요가 없을 때는 닫아줘야한다.
 
 ---
+
+### Unconfined vs confined dispatcher
+Dispatchers.Unconfined는 호출한 스레드에서 코루틴을 시작하지만 첫 번째 중단 함수를 만날 때까지만 실행된다.
+
+정지된 이후 다시 재개될 때는 정지 함수가 호출된 스레드에서 다시 시작된다.
+
+Unconfined 디스패처는 CPU 시간을 소비하거나 공유 데이터를 업데이트하지 않아야 한다.
+
+```kotlin
+fun main() = runBlocking<Unit> {
+    launch(Dispatchers.Unconfined) { // not confined -- will work with main thread
+        println("Unconfined      : I'm working in thread ${Thread.currentThread().name}")
+        delay(500)
+        println("Unconfined      : After delay in thread ${Thread.currentThread().name}")
+    }
+    launch { // context of the parent, main runBlocking coroutine
+        println("main runBlocking: I'm working in thread ${Thread.currentThread().name}")
+        delay(1000)
+        println("main runBlocking: After delay in thread ${Thread.currentThread().name}")
+    }
+}
+
+// 실행 결과
+Unconfined      : I'm working in thread main
+main runBlocking: I'm working in thread main
+Unconfined      : After delay in thread kotlinx.coroutines.DefaultExecutor
+main runBlocking: After delay in thread main
+```
+
+디스패처는 기본적으로 부모 CoroutineScope를 상속받는다.
+
+위 코드에서 파라미터 없이 호출된 launch의 경우 부모 Scope를 상속 받았기 때문에 runBlocking의 스레드에서 계속 실행된다.
+
+반면 unconfined 코루틴은 delay 함수가 사용한 DefaultExecutor 스레드에서 재개된다.
+
+<br>
+
+참고로 unconfined 디스패처는 사이드 이펙트를 발생시킬 수 있는 고급 메커니즘으로<br>
+일반 코드에서 사용하지 않는 것을 추천하고 있다.
+
+---
