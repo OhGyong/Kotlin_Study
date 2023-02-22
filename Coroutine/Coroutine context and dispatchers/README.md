@@ -169,3 +169,35 @@ job3: 영향을 받지 않았음
 ```
 
 ---
+
+### 부모 코루틴의 의무
+부모 코루틴은 항상 모든 자식 코루틴의 실행이 완료될 때까지 기다린다.
+
+```kotlin
+fun main() = runBlocking {
+    val request = launch {
+        launch {
+            delay(1000)
+        }
+
+        launch {
+            delay(2000)
+        }
+    }
+
+    delay(1000)
+    println("request.isActive ${request.isActive}")
+
+    delay(2000)
+    println("request.isActive ${request.isActive}")
+}
+
+// 실행 결과
+request.isActive true
+request.isActive false
+```
+
+부모 코루틴인 request에 자식 코루틴을 두 개 생성하였다.
+
+1초가 지났을 때 자식 코루틴 하나가 완료되지 않아서 부모 코루틴의 Active가 true로 나왔고<br>
+2초가 지나서 자식 코루틴이 모두 종료되자 부모 코루틴의 Active가 false로 나오는것을 확인할 수 있다.
