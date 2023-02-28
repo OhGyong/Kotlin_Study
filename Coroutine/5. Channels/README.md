@@ -102,3 +102,15 @@ error : kotlinx.coroutines.channels.ClosedSendChannelException: Channel was clos
 ```
 
 close 토큰이 Channel에 전달되기 전에 전송된 값들은 모두 출력되는 것을 확인할 수 있다.
+
+--- 
+
+### Building channel producers
+
+코루틴이 어떤 데이터 스트림을 생성하는 패턴은 꽤나 흔한 일이며,<br/>
+동시성 코드에서 종종 볼 수 있는 producer-consumer 패턴의 종류이다.
+
+Channel을 매개변수로 사용하는 함수를 통해 producer를 추상화할 수 있으나,<br/>
+함수로부터 결과를 반드시 반환해야한다는 일반적인 상식과는 반대된다.
+
+producer의 추상화 작업을 쉽게 해주는 produce라는 코루틴 빌더가 있고,
