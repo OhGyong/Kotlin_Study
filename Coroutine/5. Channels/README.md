@@ -113,4 +113,25 @@ close 토큰이 Channel에 전달되기 전에 전송된 값들은 모두 출력
 Channel을 매개변수로 사용하는 함수를 통해 producer를 추상화할 수 있으나,<br/>
 함수로부터 결과를 반드시 반환해야한다는 일반적인 상식과는 반대된다.
 
-producer의 추상화 작업을 쉽게 해주는 produce라는 코루틴 빌더가 있고,
+producer의 추상화 작업을 쉽게 해주는 **produce** 라는 코루틴 빌더가 있고,<br/>
+수신하는 쪽에서 for 루프를 대신하는 **consumeEach** 라는 확장함수가 있다.   
+
+```kotlin
+fun CoroutineScope.produceSquares(): ReceiveChannel<Int> = produce {
+    for (x in 1..5) send(x * x)
+}
+
+fun main() = runBlocking {
+    val squares = produceSquares()
+    squares.consumeEach { println(it) }
+    println("Done!")
+}
+
+// 실행 결과
+1
+4
+9
+16
+25
+Done!
+```
