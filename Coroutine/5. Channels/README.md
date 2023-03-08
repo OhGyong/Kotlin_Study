@@ -135,3 +135,43 @@ fun main() = runBlocking {
 25
 Done!
 ```
+
+---
+
+### Pipelines
+파이프라인은 하나의 코루틴이 데이터 스트림을 무한정 생산이 가능하게 하는 패턴을 말한다.<br/>
+그리고 또 다른 코루틴은 데이터 스트림을 소비하고 처리하고 다른 결과를 낸다.
+
+```kotlin
+fun main() = runBlocking {
+    val numbers = produceNumbers() // produces integers from 1 and on
+    val squares = square(numbers) // squares integers
+    repeat(5) {
+        println(squares.receive()) // print first five
+    }
+    println("Done!") // we are done
+    coroutineContext.cancelChildren() // cancel children coroutines
+}
+
+fun CoroutineScope.produceNumbers() = produce<Int> {
+    var x = 1
+    while (true) send(x++) // infinite stream of integers starting from 1
+}
+
+fun CoroutineScope.square(numbers: ReceiveChannel<Int>): ReceiveChannel<Int> = produce {
+    for (x in numbers) send(x * x)
+}
+
+// 실행 결과
+1
+4
+9
+16
+25
+Done!
+```
+
+위 코드를 보면 produceNumbers() 코루틴 블록에서 값을 무한정 생산하고<br/>
+square() 코루틴 블록에서 데이터를 수신하여 값의 제곱 처리를 하고 있다.
+
+이런 형태의 패턴을 파이프라인이라고 한다.
