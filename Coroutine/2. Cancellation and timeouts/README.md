@@ -203,7 +203,8 @@ main: I'm tired of waiting!
 main: Now I can quit.
 ```
 
-첫 번째 방법으로 yield를 사용할 수 있다.
+첫 번째 방법으로 yield를 사용할 수 있다.<br/>
+yield는 해당 위치에서 코루틴을 일시 중단한다.
 
 yield는 정지되지 않아도 취소 항상 여부를 확인하며,<br>
 Job이 취소되거나 완료되면  CancellationException으로 재개된다.
